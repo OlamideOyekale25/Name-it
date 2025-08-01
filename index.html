@@ -49,6 +49,67 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
+        .connection-status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .connected {
+            background: rgba(46, 204, 113, 0.3);
+            border: 1px solid #2ecc71;
+        }
+
+        .disconnected {
+            background: rgba(231, 76, 60, 0.3);
+            border: 1px solid #e74c3c;
+        }
+
+        .game-code {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-code h2 {
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .code-display {
+            font-size: 2rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            letter-spacing: 2px;
+        }
+
+        .join-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .join-input {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .join-input input {
+            padding: 15px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            min-width: 200px;
+        }
+
         .players-section {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -62,10 +123,19 @@
             padding: 20px;
             text-align: center;
             transition: transform 0.3s ease;
+            position: relative;
         }
 
         .player-card:hover {
             transform: translateY(-5px);
+        }
+
+        .player-card.current-user {
+            border: 2px solid #ffd700;
+        }
+
+        .player-card.submitted {
+            background: rgba(46, 204, 113, 0.3);
         }
 
         .player-name {
@@ -78,6 +148,14 @@
             font-size: 2rem;
             color: #ffd700;
             font-weight: bold;
+        }
+
+        .player-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.8rem;
+            opacity: 0.8;
         }
 
         .controls {
@@ -259,18 +337,10 @@
             line-height: 1.6;
         }
 
-        .add-player {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        .add-player input {
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
+        .waiting-players {
+            text-align: center;
+            font-size: 1.1rem;
+            margin: 20px 0;
         }
 
         @media (max-width: 768px) {
@@ -286,6 +356,11 @@
             .answer-form {
                 grid-template-columns: 1fr;
             }
+            
+            .join-input {
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
@@ -296,146 +371,326 @@
             <p>The ultimate naming game for friends</p>
         </div>
 
-        <div class="game-rules">
-            <h2>How to Play</h2>
-            <ul>
-                <li>Add players to join the game</li>
-                <li>One player picks a letter to start the round</li>
-                <li>All players have 45 seconds to write names for People, Things, Animals, and Places starting with that letter</li>
-                <li>After time runs out, review and mark correct answers</li>
-                <li>Each correct answer = 5 points</li>
-                <li>Player with the most points wins!</li>
-            </ul>
+        <div id="connectionStatus" class="connection-status disconnected">
+            🔄 Connecting to game server...
         </div>
 
-        <div class="game-section">
-            <h2 style="text-align: center; margin-bottom: 20px;">Players</h2>
-            
-            <div class="add-player">
-                <input type="text" id="playerNameInput" placeholder="Enter player name" maxlength="20">
-                <button class="btn btn-secondary" onclick="addPlayer()">Add Player</button>
-            </div>
-
-            <div class="players-section" id="playersSection">
-                <!-- Players will be added here -->
+        <div id="joinSection" class="game-section">
+            <div class="join-section">
+                <h2>Join or Create Game</h2>
+                <div class="join-input">
+                    <input type="text" id="playerNameInput" placeholder="Enter your name" maxlength="20">
+                    <input type="text" id="gameCodeInput" placeholder="Game code (optional - leave empty to create)" maxlength="6">
+                    <button class="btn btn-primary" onclick="joinGame()">Join/Create Game</button>
+                </div>
             </div>
         </div>
 
-        <div class="game-section">
-            <div class="controls">
-                <button class="btn btn-primary" id="startRoundBtn" onclick="startRound()" disabled>Start Round</button>
-                <button class="btn btn-secondary" onclick="resetGame()">Reset Game</button>
+        <div id="gameSection" class="hidden">
+            <div class="game-code">
+                <h2>Game Code</h2>
+                <div class="code-display" id="gameCodeDisplay"></div>
+                <p>Share this code with your friends!</p>
             </div>
 
-            <div class="game-state" id="gameState">
-                <div id="waitingMessage">Add at least 2 players to start!</div>
-                <div id="letterDisplay" class="hidden">
-                    <div>Current Letter:</div>
-                    <div class="current-letter" id="currentLetter"></div>
-                    <div class="timer" id="timer">45</div>
+            <div class="game-rules">
+                <h2>How to Play</h2>
+                <ul>
+                    <li>Share the game code with friends so they can join</li>
+                    <li>One player starts the round to pick a random letter</li>
+                    <li>All players have 45 seconds to write names for People, Things, Animals, and Places starting with that letter</li>
+                    <li>Submit your answers before time runs out or wait for the timer</li>
+                    <li>After everyone submits, review and mark correct answers together</li>
+                    <li>Each correct answer = 5 points</li>
+                </ul>
+            </div>
+
+            <div class="game-section">
+                <h2 style="text-align: center; margin-bottom: 20px;">Players</h2>
+                
+                <div class="players-section" id="playersSection">
+                    <!-- Players will be added here -->
+                </div>
+
+                <div class="waiting-players" id="waitingMessage">
+                    Waiting for more players to join...
                 </div>
             </div>
 
-            <div id="answerSection" class="hidden">
-                <div class="answer-form">
-                    <div class="category">
-                        <h3>👥 People</h3>
-                        <input type="text" id="peopleAnswer" placeholder="Enter a person's name...">
-                    </div>
-                    <div class="category">
-                        <h3>📦 Things</h3>
-                        <input type="text" id="thingsAnswer" placeholder="Enter a thing...">
-                    </div>
-                    <div class="category">
-                        <h3>🐾 Animals</h3>
-                        <input type="text" id="animalsAnswer" placeholder="Enter an animal...">
-                    </div>
-                    <div class="category">
-                        <h3>🌍 Places</h3>
-                        <input type="text" id="placesAnswer" placeholder="Enter a place...">
-                    </div>
+            <div class="game-section">
+                <div class="controls">
+                    <button class="btn btn-primary" id="startRoundBtn" onclick="startRound()" disabled>Start Round</button>
+                    <button class="btn btn-secondary" onclick="resetGame()">Reset Scores</button>
                 </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-primary" id="submitAnswersBtn" onclick="submitAnswers()">Submit Answers</button>
-                    <p style="margin-top: 10px; opacity: 0.8;">You can submit early or wait for the timer to run out</p>
-                </div>
-            </div>
 
-            <div id="reviewSection" class="review-section">
-                <h2 style="text-align: center; margin-bottom: 30px;">Review Answers</h2>
-                <div id="reviewContent"></div>
-                <div style="text-align: center; margin-top: 30px;">
-                    <button class="btn btn-primary" onclick="finishReview()">Finish Review</button>
+                <div class="game-state" id="gameState">
+                    <div id="letterDisplay" class="hidden">
+                        <div>Current Letter:</div>
+                        <div class="current-letter" id="currentLetter"></div>
+                        <div class="timer" id="timer">45</div>
+                    </div>
+                </div>
+
+                <div id="answerSection" class="hidden">
+                    <div class="answer-form">
+                        <div class="category">
+                            <h3>👥 People</h3>
+                            <input type="text" id="peopleAnswer" placeholder="Enter a person's name...">
+                        </div>
+                        <div class="category">
+                            <h3>📦 Things</h3>
+                            <input type="text" id="thingsAnswer" placeholder="Enter a thing...">
+                        </div>
+                        <div class="category">
+                            <h3>🐾 Animals</h3>
+                            <input type="text" id="animalsAnswer" placeholder="Enter an animal...">
+                        </div>
+                        <div class="category">
+                            <h3>🌍 Places</h3>
+                            <input type="text" id="placesAnswer" placeholder="Enter a place...">
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn btn-primary" id="submitAnswersBtn" onclick="submitAnswers()">Submit Answers</button>
+                        <p style="margin-top: 10px; opacity: 0.8;">You can submit early or wait for the timer to run out</p>
+                    </div>
+                </div>
+
+                <div id="reviewSection" class="review-section">
+                    <h2 style="text-align: center; margin-bottom: 30px;">Review Answers</h2>
+                    <div id="reviewContent"></div>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button class="btn btn-primary" onclick="finishReview()">Finish Review</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let players = [];
-        let currentRound = 0;
-        let gameState = 'waiting'; // waiting, playing, reviewing
-        let currentLetter = '';
+        // Game state variables
+        let gameId = '';
+        let playerId = '';
+        let playerName = '';
+        let gameData = {
+            players: {},
+            gameState: 'waiting',
+            currentLetter: '',
+            timeLeft: 45,
+            currentRound: 0,
+            roundAnswers: {},
+            submittedPlayers: new Set()
+        };
         let timer = null;
-        let timeLeft = 45;
-        let roundAnswers = {};
-        let submittedPlayers = new Set();
+        let syncInterval = null;
 
-        function addPlayer() {
-            const input = document.getElementById('playerNameInput');
-            const name = input.value.trim();
+        // Simple P2P-like synchronization using localStorage and periodic sync
+        // In a real app, you'd use WebSocket, Socket.io, or Firebase
+        
+        function generateGameCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        function generatePlayerId() {
+            return 'player_' + Math.random().toString(36).substring(2, 15);
+        }
+
+        function joinGame() {
+            const nameInput = document.getElementById('playerNameInput');
+            const codeInput = document.getElementById('gameCodeInput');
             
-            if (name && !players.find(p => p.name === name)) {
-                players.push({
-                    name: name,
-                    score: 0,
-                    id: Date.now()
-                });
-                input.value = '';
-                updatePlayersDisplay();
-                updateStartButton();
+            playerName = nameInput.value.trim();
+            let inputGameCode = codeInput.value.trim().toUpperCase();
+            
+            if (!playerName) {
+                alert('Please enter your name');
+                return;
             }
+
+            playerId = generatePlayerId();
+            
+            if (inputGameCode) {
+                // Join existing game
+                gameId = inputGameCode;
+                loadGameData();
+                if (!gameData.players || Object.keys(gameData.players).length === 0) {
+                    alert('Game not found. Creating a new game instead.');
+                    createNewGame();
+                } else {
+                    joinExistingGame();
+                }
+            } else {
+                // Create new game
+                createNewGame();
+            }
+            
+            showGameSection();
+            startSyncInterval();
+        }
+
+        function createNewGame() {
+            gameId = generateGameCode();
+            gameData = {
+                players: {},
+                gameState: 'waiting',
+                currentLetter: '',
+                timeLeft: 45,
+                currentRound: 0,
+                roundAnswers: {},
+                submittedPlayers: []
+            };
+            
+            gameData.players[playerId] = {
+                name: playerName,
+                score: 0,
+                id: playerId,
+                isHost: true
+            };
+            
+            saveGameData();
+        }
+
+        function joinExistingGame() {
+            if (gameData.players[playerId] || Object.values(gameData.players).some(p => p.name === playerName)) {
+                alert('A player with this name is already in the game');
+                return;
+            }
+            
+            gameData.players[playerId] = {
+                name: playerName,
+                score: 0,
+                id: playerId,
+                isHost: false
+            };
+            
+            saveGameData();
+        }
+
+        function showGameSection() {
+            document.getElementById('joinSection').classList.add('hidden');
+            document.getElementById('gameSection').classList.remove('hidden');
+            document.getElementById('gameCodeDisplay').textContent = gameId;
+            updateConnectionStatus(true);
+        }
+
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            if (connected) {
+                status.className = 'connection-status connected';
+                status.innerHTML = '✅ Connected to game: ' + gameId;
+            } else {
+                status.className = 'connection-status disconnected';
+                status.innerHTML = '❌ Connection lost - trying to reconnect...';
+            }
+        }
+
+        function saveGameData() {
+            try {
+                // Use a unique key for each game
+                const key = 'nameItGame_' + gameId;
+                gameData.lastUpdate = Date.now();
+                gameData.updatedBy = playerId;
+                
+                // Store in localStorage (in a real app, use a backend)
+                localStorage.setItem(key, JSON.stringify(gameData));
+            } catch (e) {
+                console.error('Failed to save game data:', e);
+            }
+        }
+
+        function loadGameData() {
+            try {
+                const key = 'nameItGame_' + gameId;
+                const saved = localStorage.getItem(key);
+                if (saved) {
+                    const loaded = JSON.parse(saved);
+                    // Only update if the data is newer and not from this player
+                    if (!gameData.lastUpdate || 
+                        (loaded.lastUpdate > gameData.lastUpdate && loaded.updatedBy !== playerId)) {
+                        gameData = loaded;
+                        // Convert submittedPlayers array back to Set
+                        gameData.submittedPlayers = new Set(gameData.submittedPlayers || []);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load game data:', e);
+            }
+        }
+
+        function startSyncInterval() {
+            // Sync every 2 seconds
+            syncInterval = setInterval(() => {
+                loadGameData();
+                updateGameDisplay();
+            }, 2000);
         }
 
         function updatePlayersDisplay() {
             const section = document.getElementById('playersSection');
-            section.innerHTML = players.map(player => `
-                <div class="player-card">
-                    <div class="player-name">${player.name}</div>
-                    <div class="player-score">${player.score} pts</div>
-                </div>
-            `).join('');
+            const players = Object.values(gameData.players);
+            
+            section.innerHTML = players.map(player => {
+                const isCurrentUser = player.id === playerId;
+                const isSubmitted = gameData.submittedPlayers.has(player.id);
+                const statusClass = isSubmitted ? 'submitted' : '';
+                const userClass = isCurrentUser ? 'current-user' : '';
+                
+                return `
+                    <div class="player-card ${userClass} ${statusClass}">
+                        <div class="player-status">
+                            ${isCurrentUser ? '(You)' : ''}
+                            ${isSubmitted && gameData.gameState === 'playing' ? '✓' : ''}
+                            ${player.isHost ? '👑' : ''}
+                        </div>
+                        <div class="player-name">${player.name}</div>
+                        <div class="player-score">${player.score} pts</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function updateStartButton() {
             const btn = document.getElementById('startRoundBtn');
             const message = document.getElementById('waitingMessage');
+            const players = Object.values(gameData.players);
+            const currentPlayer = gameData.players[playerId];
             
-            if (players.length >= 2) {
-                btn.disabled = false;
-                message.textContent = 'Ready to play! Click Start Round.';
+            if (players.length >= 2 && gameData.gameState === 'waiting') {
+                if (currentPlayer && currentPlayer.isHost) {
+                    btn.disabled = false;
+                    btn.textContent = 'Start Round';
+                    message.textContent = 'Ready to play! Click Start Round.';
+                } else {
+                    btn.disabled = true;
+                    btn.textContent = 'Waiting for Host';
+                    message.textContent = 'Waiting for the host to start the round...';
+                }
+            } else if (players.length < 2) {
+                btn.disabled = true;
+                btn.textContent = 'Need More Players';
+                message.textContent = `Need at least 2 players. Share code: ${gameId}`;
             } else {
                 btn.disabled = true;
-                message.textContent = 'Add at least 2 players to start!';
             }
         }
 
         function startRound() {
-            if (gameState !== 'waiting') return;
+            const currentPlayer = gameData.players[playerId];
+            if (!currentPlayer || !currentPlayer.isHost || gameData.gameState !== 'waiting') return;
             
             // Pick random letter
             const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            currentLetter = letters[Math.floor(Math.random() * letters.length)];
+            gameData.currentLetter = letters[Math.floor(Math.random() * letters.length)];
             
-            gameState = 'playing';
-            currentRound++;
-            timeLeft = 45;
-            submittedPlayers.clear();
+            gameData.gameState = 'playing';
+            gameData.currentRound++;
+            gameData.timeLeft = 45;
+            gameData.submittedPlayers = new Set();
+            gameData.roundAnswers = {};
             
-            // Initialize round answers
-            roundAnswers = {};
-            players.forEach(player => {
-                roundAnswers[player.id] = {
+            // Initialize round answers for all players
+            Object.keys(gameData.players).forEach(pId => {
+                gameData.roundAnswers[pId] = {
                     people: '',
                     things: '',
                     animals: '',
@@ -443,6 +698,7 @@
                 };
             });
             
+            saveGameData();
             updateGameDisplay();
             startTimer();
         }
@@ -454,146 +710,112 @@
             const reviewSection = document.getElementById('reviewSection');
             const startBtn = document.getElementById('startRoundBtn');
             
-            if (gameState === 'playing') {
-                waitingMsg.classList.add('hidden');
+            updatePlayersDisplay();
+            
+            if (gameData.gameState === 'playing') {
                 letterDisplay.classList.remove('hidden');
                 answerSection.classList.remove('hidden');
                 reviewSection.style.display = 'none';
-                startBtn.disabled = true;
                 
-                document.getElementById('currentLetter').textContent = currentLetter;
-                document.getElementById('timer').textContent = timeLeft;
+                document.getElementById('currentLetter').textContent = gameData.currentLetter;
+                document.getElementById('timer').textContent = gameData.timeLeft;
                 
-                // Clear input fields and enable submit button
-                document.getElementById('peopleAnswer').value = '';
-                document.getElementById('thingsAnswer').value = '';
-                document.getElementById('animalsAnswer').value = '';
-                document.getElementById('placesAnswer').value = '';
-                document.getElementById('submitAnswersBtn').disabled = false;
-                document.getElementById('submitAnswersBtn').textContent = 'Submit Answers';
+                const submitBtn = document.getElementById('submitAnswersBtn');
+                const isSubmitted = gameData.submittedPlayers.has(playerId);
                 
-            } else if (gameState === 'reviewing') {
+                submitBtn.disabled = isSubmitted;
+                submitBtn.textContent = isSubmitted ? 'Submitted! ✓' : 'Submit Answers';
+                
+                // Clear inputs only at start of round
+                if (gameData.timeLeft === 45 && !isSubmitted) {
+                    document.getElementById('peopleAnswer').value = '';
+                    document.getElementById('thingsAnswer').value = '';
+                    document.getElementById('animalsAnswer').value = '';
+                    document.getElementById('placesAnswer').value = '';
+                }
+                
+            } else if (gameData.gameState === 'reviewing') {
                 letterDisplay.classList.add('hidden');
                 answerSection.classList.add('hidden');
                 reviewSection.style.display = 'block';
                 generateReviewContent();
                 
-            } else if (gameState === 'waiting') {
-                waitingMsg.classList.remove('hidden');
+            } else if (gameData.gameState === 'waiting') {
                 letterDisplay.classList.add('hidden');
                 answerSection.classList.add('hidden');
                 reviewSection.style.display = 'none';
-                startBtn.disabled = players.length < 2;
             }
+            
+            updateStartButton();
         }
 
         function startTimer() {
+            if (timer) clearInterval(timer);
+            
             timer = setInterval(() => {
-                timeLeft--;
+                gameData.timeLeft--;
                 const timerEl = document.getElementById('timer');
-                timerEl.textContent = timeLeft;
-                
-                if (timeLeft <= 10) {
-                    timerEl.classList.add('warning');
-                } else {
-                    timerEl.classList.remove('warning');
+                if (timerEl) {
+                    timerEl.textContent = gameData.timeLeft;
+                    
+                    if (gameData.timeLeft <= 10) {
+                        timerEl.classList.add('warning');
+                    } else {
+                        timerEl.classList.remove('warning');
+                    }
                 }
                 
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    endRound();
+                // Only the host manages the timer
+                const currentPlayer = gameData.players[playerId];
+                if (currentPlayer && currentPlayer.isHost) {
+                    if (gameData.timeLeft <= 0) {
+                        clearInterval(timer);
+                        endRound();
+                    } else {
+                        saveGameData();
+                    }
                 }
             }, 1000);
         }
 
-        function endRound() {
-            gameState = 'reviewing';
-            
-            // Save current user's answers if not already submitted
-            if (!submittedPlayers.has(players[0].id)) {
-                saveCurrentPlayerAnswers();
-            }
-            
-            // Generate demo answers for other players who haven't submitted
-            players.forEach(player => {
-                if (!submittedPlayers.has(player.id) && player.id !== players[0].id) {
-                    roundAnswers[player.id] = generateDemoAnswers(currentLetter);
-                }
-            });
-            
-            updateGameDisplay();
-        }
-
         function submitAnswers() {
-            if (gameState !== 'playing') return;
+            if (gameData.gameState !== 'playing' || gameData.submittedPlayers.has(playerId)) return;
             
             // Save current player's answers
-            saveCurrentPlayerAnswers();
-            submittedPlayers.add(players[0].id);
-            
-            // Update submit button
-            const submitBtn = document.getElementById('submitAnswersBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitted! ✓';
-            
-            // For demo purposes, also submit for other players after a short delay
-            setTimeout(() => {
-                players.slice(1).forEach(player => {
-                    if (!submittedPlayers.has(player.id)) {
-                        roundAnswers[player.id] = generateDemoAnswers(currentLetter);
-                        submittedPlayers.add(player.id);
-                    }
-                });
-                
-                // Check if all players have submitted
-                if (submittedPlayers.size >= players.length) {
-                    clearInterval(timer);
-                    setTimeout(() => endRound(), 1000); // Small delay to show submission
-                }
-            }, Math.random() * 3000 + 1000); // Random delay between 1-4 seconds
-        }
-
-        function saveCurrentPlayerAnswers() {
             const categories = ['people', 'things', 'animals', 'places'];
             const inputs = ['peopleAnswer', 'thingsAnswer', 'animalsAnswer', 'placesAnswer'];
             
             inputs.forEach((inputId, index) => {
                 const value = document.getElementById(inputId).value.trim();
-                roundAnswers[players[0].id][categories[index]] = value;
+                gameData.roundAnswers[playerId][categories[index]] = value;
             });
+            
+            gameData.submittedPlayers.add(playerId);
+            
+            // Check if all players have submitted
+            const allPlayers = Object.keys(gameData.players);
+            const allSubmitted = allPlayers.every(pId => gameData.submittedPlayers.has(pId));
+            
+            if (allSubmitted) {
+                // If we're the host and everyone submitted, end the round
+                const currentPlayer = gameData.players[playerId];
+                if (currentPlayer && currentPlayer.isHost) {
+                    clearInterval(timer);
+                    setTimeout(() => endRound(), 1000);
+                }
+            }
+            
+            saveGameData();
+            updateGameDisplay();
         }
 
-        function generateDemoAnswers(letter) {
-            const demoAnswers = {
-                A: { people: 'Alice', things: 'Apple', animals: 'Ant', places: 'Australia' },
-                B: { people: 'Bob', things: 'Ball', animals: 'Bear', places: 'Brazil' },
-                C: { people: 'Charlie', things: 'Car', animals: 'Cat', places: 'Canada' },
-                D: { people: 'David', things: 'Door', animals: 'Dog', places: 'Denmark' },
-                E: { people: 'Emma', things: 'Egg', animals: 'Eagle', places: 'Egypt' },
-                F: { people: 'Frank', things: 'Fire', animals: 'Fox', places: 'France' },
-                G: { people: 'Grace', things: 'Guitar', animals: 'Giraffe', places: 'Germany' },
-                H: { people: 'Henry', things: 'Hat', animals: 'Horse', places: 'Hawaii' },
-                I: { people: 'Isaac', things: 'Ice', animals: 'Iguana', places: 'Italy' },
-                J: { people: 'Jane', things: 'Jacket', animals: 'Jaguar', places: 'Japan' },
-                K: { people: 'Kevin', things: 'Key', animals: 'Kangaroo', places: 'Kenya' },
-                L: { people: 'Lucy', things: 'Lamp', animals: 'Lion', places: 'London' },
-                M: { people: 'Mike', things: 'Mirror', animals: 'Monkey', places: 'Mexico' },
-                N: { people: 'Nina', things: 'Notebook', animals: 'Nightingale', places: 'Norway' },
-                O: { people: 'Oscar', things: 'Orange', animals: 'Owl', places: 'Oregon' },
-                P: { people: 'Paul', things: 'Phone', animals: 'Penguin', places: 'Paris' },
-                Q: { people: 'Quinn', things: 'Quilt', animals: 'Quail', places: 'Quebec' },
-                R: { people: 'Rachel', things: 'Radio', animals: 'Rabbit', places: 'Rome' },
-                S: { people: 'Sam', things: 'Shoe', animals: 'Snake', places: 'Spain' },
-                T: { people: 'Tom', things: 'Table', animals: 'Tiger', places: 'Tokyo' },
-                U: { people: 'Uma', things: 'Umbrella', animals: 'Unicorn', places: 'Utah' },
-                V: { people: 'Victor', things: 'Violin', animals: 'Vulture', places: 'Venice' },
-                W: { people: 'Wendy', things: 'Watch', animals: 'Wolf', places: 'Washington' },
-                X: { people: 'Xavier', things: 'Xylophone', animals: 'X-ray fish', places: 'Xian' },
-                Y: { people: 'Yara', things: 'Yacht', animals: 'Yak', places: 'Yemen' },
-                Z: { people: 'Zoe', things: 'Zipper', animals: 'Zebra', places: 'Zimbabwe' }
-            };
+        function endRound() {
+            const currentPlayer = gameData.players[playerId];
+            if (!currentPlayer || !currentPlayer.isHost) return;
             
-            return demoAnswers[letter] || { people: '', things: '', animals: '', places: '' };
+            gameData.gameState = 'reviewing';
+            saveGameData();
+            updateGameDisplay();
         }
 
         function generateReviewContent() {
@@ -603,12 +825,12 @@
             
             let content = '';
             
-            players.forEach(player => {
+            Object.values(gameData.players).forEach(player => {
                 content += `<div class="player-answers">
                     <h3>${player.name}'s Answers</h3>`;
                 
                 categories.forEach((category, index) => {
-                    const answer = roundAnswers[player.id][category];
+                    const answer = gameData.roundAnswers[player.id] && gameData.roundAnswers[player.id][category];
                     if (answer) {
                         content += `
                             <div class="answer-item">
@@ -629,10 +851,10 @@
             reviewContent.innerHTML = content;
         }
 
-        function markAnswer(playerId, category, isCorrect) {
-            const player = players.find(p => p.id == playerId);
-            if (player && isCorrect) {
-                player.score += 5;
+        function markAnswer(pId, category, isCorrect) {
+            if (isCorrect && gameData.players[pId]) {
+                gameData.players[pId].score += 5;
+                saveGameData();
                 updatePlayersDisplay();
             }
             
@@ -641,30 +863,54 @@
         }
 
         function finishReview() {
-            gameState = 'waiting';
+            gameData.gameState = 'waiting';
+            saveGameData();
             updateGameDisplay();
         }
 
         function resetGame() {
-            players.forEach(player => player.score = 0);
-            currentRound = 0;
-            gameState = 'waiting';
+            Object.values(gameData.players).forEach(player => player.score = 0);
+            gameData.currentRound = 0;
+            gameData.gameState = 'waiting';
+            
             if (timer) {
                 clearInterval(timer);
             }
-            updatePlayersDisplay();
+            
+            saveGameData();
             updateGameDisplay();
         }
 
-        // Allow Enter key to add players
-        document.getElementById('playerNameInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addPlayer();
+        // Handle page visibility to pause/resume syncing
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                if (syncInterval) {
+                    clearInterval(syncInterval);
+                }
+            } else {
+                if (gameId) {
+                    startSyncInterval();
+                    loadGameData();
+                    updateGameDisplay();
+                }
             }
         });
 
-        // Initialize display
-        updateStartButton();
+        // Allow Enter key in inputs
+        document.getElementById('playerNameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                joinGame();
+            }
+        });
+
+        document.getElementById('gameCodeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                joinGame();
+            }
+        });
+
+        // Initialize
+        updateConnectionStatus(false);
     </script>
 </body>
 </html>
