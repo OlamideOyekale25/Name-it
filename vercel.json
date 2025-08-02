@@ -1,24 +1,15 @@
-// Firebase configuration and initialization (Environment Variables Version)
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-// Firebase configuration using environment variables (for production)
-// or fallback to direct config (for development)
-const firebaseConfig = {
-    apiKey: window.FIREBASE_API_KEY || "AIzaSyCPO1dHYC7vPKc3n0Es4dW96u-5v85Ijx8",
-    authDomain: window.FIREBASE_AUTH_DOMAIN || "name-it-2.firebaseapp.com",
-    projectId: window.FIREBASE_PROJECT_ID || "name-it-2",
-    storageBucket: window.FIREBASE_STORAGE_BUCKET || "name-it-2.firebasestorage.app",
-    messagingSenderId: window.FIREBASE_MESSAGING_SENDER_ID || "425940990123",
-    appId: window.FIREBASE_APP_ID || "1:425940990123:web:ea7f0b2c66c656e5375fee",
-    measurementId: window.FIREBASE_MEASUREMENT_ID || "G-LBJWRHQNKC",
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// Export the database instance
-window.db = db;
-
-export { db };
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ]
+}
