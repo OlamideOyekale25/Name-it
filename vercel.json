@@ -1,31 +1,23 @@
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**/*",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
-  ],
-  "env": {
-    "FIREBASE_API_KEY": "@firebase_api_key",
-    "FIREBASE_AUTH_DOMAIN": "@firebase_auth_domain",
-    "FIREBASE_PROJECT_ID": "@firebase_project_id",
-    "FIREBASE_STORAGE_BUCKET": "@firebase_storage_bucket",
-    "FIREBASE_MESSAGING_SENDER_ID": "@firebase_messaging_sender_id",
-    "FIREBASE_APP_ID": "@firebase_app_id"
-  }
-}
+// Firebase configuration and initialization (Environment Variables Version)
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+// Firebase configuration using environment variables (for production)
+// or fallback to direct config (for development)
+const firebaseConfig = {
+    apiKey: window.FIREBASE_API_KEY || "AIzaSyCPO1dHYC7vPKc3n0Es4dW96u-5v85Ijx8",
+    authDomain: window.FIREBASE_AUTH_DOMAIN || "name-it-2.firebaseapp.com",
+    projectId: window.FIREBASE_PROJECT_ID || "name-it-2",
+    storageBucket: window.FIREBASE_STORAGE_BUCKET || "name-it-2.firebasestorage.app",
+    messagingSenderId: window.FIREBASE_MESSAGING_SENDER_ID || "425940990123",
+    appId: window.FIREBASE_APP_ID || "1:425940990123:web:ea7f0b2c66c656e5375fee"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Export the database instance
+window.db = db;
+
+export { db };
