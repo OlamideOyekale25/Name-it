@@ -15,36 +15,6 @@ const firebaseConfig = {
   measurementId: "G-LBJWRHQNKC"
 };
 
-// Initialize Firebase immediately when script loads
-if (typeof firebase !== 'undefined') {
-  try {
-    // Initialize Firebase using v8 syntax
-    firebase.initializeApp(firebaseConfig);
-    
-    // Initialize services and make them globally available
-    window.db = firebase.firestore();
-    window.auth = firebase.auth();
-    
-    console.log('Firebase initialized successfully');
-    console.log('Database available:', !!window.db);
-    
-  } catch (error) {
-    console.error('Error initializing Firebase:', error);
-  }
-} else {
-  console.error('Firebase SDK not loaded. Check script tags.');
-}
-
-// Also initialize when DOM is ready (fallback)
-document.addEventListener('DOMContentLoaded', function() {
-  if (typeof firebase !== 'undefined' && !window.db) {
-    try {
-      firebase.initializeApp(firebaseConfig);
-      window.db = firebase.firestore();
-      window.auth = firebase.auth();
-      console.log('Firebase initialized on DOM ready');
-    } catch (error) {
-      console.log('Firebase already initialized or error:', error.message);
-    }
-  }
-});
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
