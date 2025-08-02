@@ -1,11 +1,11 @@
 {
-  "name": "name-it-game",
+  "name": "name-it-",
   "version": "1.0.0",
   "description": "Multiplayer Name It game with real-time functionality",
   "main": "index.js",
   "scripts": {
     "dev": "vercel dev",
-    "build": "echo 'No build step needed'",
+    "build": "echo  \"No build step needed\"",
     "start": "vercel dev"
   },
   "dependencies": {
