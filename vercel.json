@@ -10,7 +10,8 @@ const firebaseConfig = {
     projectId: window.FIREBASE_PROJECT_ID || "name-it-2",
     storageBucket: window.FIREBASE_STORAGE_BUCKET || "name-it-2.firebasestorage.app",
     messagingSenderId: window.FIREBASE_MESSAGING_SENDER_ID || "425940990123",
-    appId: window.FIREBASE_APP_ID || "1:425940990123:web:ea7f0b2c66c656e5375fee"
+    appId: window.FIREBASE_APP_ID || "1:425940990123:web:ea7f0b2c66c656e5375fee",
+    measurementId: window.FIREBASE_MEASUREMENT_ID || "G-LBJWRHQNKC",
 };
 
 // Initialize Firebase
