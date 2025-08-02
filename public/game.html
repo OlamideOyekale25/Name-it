@@ -3,104 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Name It</title>
+    <title>Name It Game - Playing</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <div class="game-header">
+            <h1>Name It Game</h1>
             <div class="game-info">
-                <h2>🎯 Name It Game</h2>
-                <div class="room-info">
-                    <span>Room: <strong id="gameRoomCode"></strong></span>
-                    <span>Round: <strong id="roundNumber">1</strong></span>
-                </div>
-            </div>
-            <div class="player-score">
-                <span id="playerName"></span>: <strong id="playerScore">0</strong> points
-            </div>
-        </div>
-
-        <!-- Waiting for game to start -->
-        <div class="game-state" id="waitingState">
-            <h3>Waiting for host to start the round...</h3>
-            <div class="players-grid" id="playersGrid"></div>
-            <div class="host-controls" id="hostControls" style="display: none;">
-                <h4>Select a letter to start the round:</h4>
-                <div class="letter-selection">
-                    <div class="letters-grid" id="lettersGrid"></div>
+                <span id="roomCode"></span>
+                <span id="currentLetter"></span>
+                <div class="timer-container">
+                    <span>Time: </span><span id="timer">45</span>
                 </div>
             </div>
         </div>
 
-        <!-- Game playing state -->
-        <div class="game-state" id="playingState" style="display: none;">
-            <div class="round-info">
-                <h3>Letter: <span id="currentLetter" class="letter-display"></span></h3>
-                <div class="timer">
-                    <div class="timer-circle">
-                        <span id="timerDisplay">45</span>
-                    </div>
+        <div class="game-area">
+            <div class="categories">
+                <div class="category">
+                    <h3>Person</h3>
+                    <input type="text" id="person" placeholder="Enter a person's name">
+                </div>
+                <div class="category">
+                    <h3>Place</h3>
+                    <input type="text" id="place" placeholder="Enter a place">
+                </div>
+                <div class="category">
+                    <h3>Animal</h3>
+                    <input type="text" id="animal" placeholder="Enter an animal">
+                </div>
+                <div class="category">
+                    <h3>Thing</h3>
+                    <input type="text" id="thing" placeholder="Enter a thing">
                 </div>
             </div>
             
-            <div class="answers-form">
-                <div class="answer-category">
-                    <label for="peopleAnswer">👤 People:</label>
-                    <input type="text" id="peopleAnswer" placeholder="Name of a person">
-                </div>
-                <div class="answer-category">
-                    <label for="thingsAnswer">📦 Things:</label>
-                    <input type="text" id="thingsAnswer" placeholder="Name of a thing">
-                </div>
-                <div class="answer-category">
-                    <label for="animalsAnswer">🐾 Animals:</label>
-                    <input type="text" id="animalsAnswer" placeholder="Name of an animal">
-                </div>
-                <div class="answer-category">
-                    <label for="placesAnswer">🌍 Places:</label>
-                    <input type="text" id="placesAnswer" placeholder="Name of a place">
-                </div>
-                <button id="submitAnswersBtn" class="btn btn-primary">Submit Answers</button>
-            </div>
+            <button id="submitAnswers" class="submit-btn">Submit Answers</button>
         </div>
 
-        <!-- Review state -->
-        <div class="game-state" id="reviewState" style="display: none;">
-            <h3>Review Answers</h3>
-            <p>Mark the answers you think are correct:</p>
-            
-            <div class="review-grid" id="reviewGrid"></div>
-            
-            <div class="review-controls">
-                <button id="submitReviewBtn" class="btn btn-success">Submit Review</button>
-            </div>
+        <div id="reviewPhase" style="display:none;">
+            <h2>Review Answers</h2>
+            <div id="playersAnswers"></div>
+            <button id="nextRoundBtn">Next Round</button>
         </div>
 
-        <!-- Results state -->
-        <div class="game-state" id="resultsState" style="display: none;">
-            <h3>Round Results</h3>
-            <div class="results-grid" id="resultsGrid"></div>
-            <div class="leaderboard">
-                <h4>Current Scores:</h4>
-                <div id="leaderboardList"></div>
-            </div>
-            <div class="next-round-controls" id="nextRoundControls" style="display: none;">
-                <button id="nextRoundBtn" class="btn btn-primary">Start Next Round</button>
-            </div>
-        </div>
-
-        <div class="game-actions">
-            <button id="leaveGameBtn" class="btn btn-danger">Leave Game</button>
+        <div id="scoreboard">
+            <h3>Scoreboard</h3>
+            <div id="scores"></div>
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
-    <script type="module" src="js/firebase-config.js"></script>
-    <script type="module" src="js/utils.js"></script>
-    <script type="module" src="js/game.js"></script>
+    <!-- Firebase v8 Scripts (Compat mode) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
+    <!-- Your scripts - IMPORTANT: firebase-config MUST load first -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/game.js"></script>
 </body>
 </html>
