@@ -9,7 +9,7 @@
     "start": "vercel dev"
   },
   "dependencies": {
-    "firebase": "^10.7.1"
+    "firebase": "^10.14.1"
   },
   "engines": {
     "node": "18.x"
